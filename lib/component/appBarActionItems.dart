@@ -16,18 +16,21 @@ class AppBarActionItems extends StatelessWidget {
             icon: SvgPicture.asset(
               'assets/calendar.svg',
               width: 25,
+              color:AppColors.iconGray,
             ),
             onPressed: () {}),
         SizedBox(width: 10),
         IconButton(
-            icon: SvgPicture.asset('assets/time.svg', width: 25.0),
+            icon: SvgPicture.asset('assets/time.svg', width: 25.0, color:AppColors.iconGray),
             onPressed: () {}),
         SizedBox(width: 15),
         Row(children: [
           CircleAvatar(
             radius: 17,
-            backgroundImage: NetworkImage(
-              'https://cdn.shopify.com/s/files/1/0045/5104/9304/t/27/assets/AC_ECOM_SITE_2020_REFRESH_1_INDEX_M2_THUMBS-V2-1.jpg?v=8913815134086573859',
+            child: SvgPicture.asset(
+              'assets/man.svg',
+            width:34,
+            height:34,
             ),
           ),
           Icon(Icons.arrow_drop_down_outlined, color: AppColors.black)

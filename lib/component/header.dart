@@ -32,7 +32,7 @@ class Header extends StatelessWidget {
                 text: 'Dashboard',
                 size: 16,
                 fontWeight: FontWeight.w400,
-                color: AppColors.secondary,
+                color: AppColors.iconGray,
               )
             ]),
       ),
@@ -43,6 +43,7 @@ class Header extends StatelessWidget {
         flex: Responsive.isDesktop(context) ? 1 : 3,
        child: DropdownButton<TimePeriod>(
     value: selectedTimePeriod,
+    dropdownColor:  AppColors.barBg,
     onChanged: (TimePeriod? newValue) {
       if (newValue != null) {
         onTimePeriodChanged(newValue);
@@ -52,7 +53,11 @@ class Header extends StatelessWidget {
       (TimePeriod value) {
         return DropdownMenuItem<TimePeriod>(
           value: value,
-          child: Text(value.toString().split('.').last),
+          
+          child: Text(value.toString().split('.').last,
+          style: TextStyle(
+    color: AppColors.iconGray),
+    ),
         );
       },
     ).toList(),

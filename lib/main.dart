@@ -1,32 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_responsive_dashboard_ui/dashboard.dart';
+import 'package:flutter_responsive_dashboard_ui/influx_service.dart';
 import 'package:flutter_responsive_dashboard_ui/style/colors.dart';
-
+import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:flutter/services.dart' show rootBundle;
-
+import 'package:flutter_responsive_dashboard_ui/data_model.dart' as data;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import 'package:influxdb_client/api.dart' show FluxRecord;
+
+
 late FirebaseDatabase database;
 late DatabaseReference databaseReference;
 
-
+class MyHttpOverride extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
+  }
+}
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  HttpOverrides.global = MyHttpOverride();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   database = FirebaseDatabase.instance;
   databaseReference = FirebaseDatabase.instance.ref().child('region');
-  
-  List<MyDataModel> parsedData = await loadCSVData();
+  final InfluxService influxService = InfluxService();
 
-  runApp(MyApp(parsedData: parsedData));
+  
+ // List<MyDataModel> parsedData = await loadCSVData();
+  List<data.MyDataModel> influxData = await influxService.getInfluxData("10m", "722748/0");
+
+  runApp(MyApp(influxData: influxData));
  
 }
 
-Future<List<MyDataModel>>loadCSVData() async {
+
+
+/* Future<List<MyDataModel>>loadCSVData() async {
   final csvData = await rootBundle.loadString('csv_data/8822980_2023-06-22_11_13_influxdb_data.csv');
 
   // Parse the CSV data
@@ -71,60 +88,32 @@ Future<List<MyDataModel>>loadCSVData() async {
   }
   // Perform any further actions with the parsed and processed CSV data
   for (final data in myDataList) {
-  print('Result: ${data.result}');
-  print('Table: ${data.table}');
-  print('Start: ${data.start}');
-  print('Stop: ${data.stop}');
-  print('Time: ${data.time}');
-  print('Value: ${data.value}');
-  print('Field: ${data.field}');
-  print('Measurement: ${data.measurement}');
-  print('Host: ${data.host}');
-  print('Topic: ${data.topic}');
+  // print('Result: ${data.result}');
+  // print('Table: ${data.table}');
+  // print('Start: ${data.start}');
+  // print('Stop: ${data.stop}');
+  // print('Time: ${data.time}');
+  // print('Value: ${data.value}');
+  // print('Field: ${data.field}');
+  // print('Measurement: ${data.measurement}');
+  // print('Host: ${data.host}');
+  // print('Topic: ${data.topic}');
 }
 
   return myDataList;
 
-}
+} */
 
-class MyDataModel {
-  final String result;
-
-  final int table;
-  final DateTime start;
-  final DateTime stop;
-  final DateTime time;
-  final double value;
-  final String field;
-  final String measurement;
-  final String host;
-  final String topic;
-  final String column;
-
-  MyDataModel({
-    required this.result,
-    required this.table,
-    required this.start,
-    required this.stop,
-    required this.time,
-    required this.value,
-    required this.field,
-    required this.measurement,
-    required this.host,
-    required this.topic,
-    required this.column,
-  });
-  
-}
 
 
 
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
-  final List<MyDataModel> parsedData; 
-   const MyApp({Key? key, required this.parsedData}) : super(key: key);
-  @override
+  final List<data.MyDataModel> influxData;
+  const MyApp({Key? key, required this.influxData}) : super(key: key);
+
+    @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -133,7 +122,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         scaffoldBackgroundColor: AppColors.primaryBg
       ),
-      home: Dashboard(parsedData : parsedData),
+      home: Dashboard(parsedData:influxData),
     );
   }
 }

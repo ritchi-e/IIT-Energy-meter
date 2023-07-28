@@ -4,7 +4,7 @@ import 'package:flutter_responsive_dashboard_ui/config/responsive.dart';
 import 'package:flutter_responsive_dashboard_ui/config/size_config.dart';
 import 'package:flutter_responsive_dashboard_ui/style/colors.dart';
 import 'package:flutter_responsive_dashboard_ui/style/style.dart';
-
+import 'package:flutter_responsive_dashboard_ui/data_model.dart';
 import '../main.dart';
 
 
@@ -12,7 +12,7 @@ class InfoCard extends StatelessWidget {
   final String icon;
   final String label;
   final String amount;
-   final List<MyDataModel> data;
+  final List<MyDataModel> data;
 
   InfoCard({required this.icon, required this.label, required this.amount,required this.data, });
 
@@ -37,7 +37,7 @@ class InfoCard extends StatelessWidget {
             ),
             PrimaryText(
                 text: label,
-                color: AppColors.secondary,
+                color: Color.fromARGB(255, 3, 1, 15),
                 size: 16),
             SizedBox(
               height: SizeConfig.blockSizeVertical * 2,
@@ -46,6 +46,8 @@ class InfoCard extends StatelessWidget {
               text: amount,
               size: 18,
               fontWeight: FontWeight.w700,
+              color: Color.fromARGB(255, 104, 5, 171),
+              
             )
           ],
         ),);

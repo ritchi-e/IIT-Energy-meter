@@ -41,6 +41,9 @@ dependencies:
   cloud_firestore: ^4.8.2
   firebase_database: ^10.2.3
   csv: ^5.0.2
+  influxdb_client: ^2.9.0
+  intl: ^0.18.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

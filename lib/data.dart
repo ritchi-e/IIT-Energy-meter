@@ -1,18 +1,21 @@
 const recentActivities = [
   {
     "icon": 'assets/alert.svg',
-    "label": 'Temperature Rise',
-    "amount": "70 C"
-  },
-  {
-    "icon": 'assets/current.svg',
-    "label": 'Current Overload',
-    "amount": "80 A"
+    "label":'v3N',
+    "amount": "",
+    "threshold": 230.00,
   },
   {
     "icon": 'assets/alert.svg',
-    "label": 'Voltage Fluctuation',
-    "amount": "~50 V"
+    "label": 'v1N',
+    "amount": "",
+    "threshold": 230.00,
+  },
+  {
+    "icon": 'assets/alert.svg',
+    "label": 'v2N',
+    "amount": "",
+    "threshold": 230.00,
   },
   
 ];
@@ -39,22 +42,28 @@ const transactionHistory = [
   {
     "avatar": 'assets/r1.svg',
     "label": 'Region 1 ',
-    "amount": "350 KWh",
-    "time": "10:42:23 AM",
+    "amount": "0.00 KWh",
+    "time": "HVAC",
     "status": "Stable",
   },
   {
     "avatar": 'assets/r2.svg',
     "label": 'Region 2',
-    "amount": "400 KWh",
-    "time": "12:42:00 PM",
+    "amount": "0.00 KWh",
+    "time": "IT Components",
     "status": "stable",
   },
   {
     "avatar": 'assets/r1.svg',
     "label": 'Region 3',
-    "amount": "150 KWh",
-    "time": "10:42:23 PM",
+    "amount": "0.00 KWh",
+    "time": "Misc",
     "status": "Stable",
   },
 ];
+
+
+
+
+
+

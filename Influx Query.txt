@@ -1,0 +1,16 @@
+const token =
+  "gD5kuHNGXz9MGzeRlJ7MGT0wPa7bNlLQ8eS8giLyqx1wXURon3ZWQ1DfyTdJ8asm1WDvgiEYgjvvhH2sZDD9pw==";
+const org = "IIT-Delhi";
+const url = "http://10.17.51.12:8086";
+
+query='''
+from(bucket: "iitdenergy")
+    |> range(start: -30m)
+    |> filter(fn: (r) => r["_measurement"] == "mqtt_consumer")
+    |> filter(fn: (r) => r["_field"] == "AvgPF" or r["_field"] == "Freq" or r["_field"] == "I1" or r["_field"] == "I2" or r["_field"] == "I3" or r["_field"] == "PF1" or r["_field"] == "PF2" or r["_field"] == "PF3" or r["_field"] == "TkVA" or r["_field"] == "TkVAr" or r["_field"] == "TkW" or r["_field"] == "V1N" or r["_field"] == "V2N" or r["_field"] == "V3N" or r["_field"] == "kW1" or r["_field"] == "kW2" or r["_field"] == "kW3" or r["_field"] == "kWh")
+    |> filter(fn: (r) => r["topic"] == "/devices/swsn/FSM-722748/0")
+    |> filter(fn: (r) => r["host"] == "baadalvm")
+    |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+    |> yield(name: "results")
+  
+''';

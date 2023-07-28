@@ -11,35 +11,84 @@ import 'package:flutter_responsive_dashboard_ui/config/responsive.dart';
 import 'package:flutter_responsive_dashboard_ui/config/size_config.dart';
 import 'package:flutter_responsive_dashboard_ui/style/colors.dart';
 import 'package:flutter_responsive_dashboard_ui/style/style.dart';
+// ignore: unused_import
 import '../main.dart';
+import 'package:flutter_responsive_dashboard_ui/data_model.dart';
+import 'package:flutter_responsive_dashboard_ui/influx_service.dart';
+
 
 enum TimePeriod {
-  Today,
-  This_week,
-  This_month,
+  two_minutes,
+  five_minutes,
+ ten_minutes,
 }
 
-
+String getLatestPowerFactor(List<MyDataModel> data) {
+  if (data.isEmpty) {
+    return ''; // Return an empty string if the data list is empty
+  }
+  data.sort((a, b) => b.time.compareTo(a.time));
+  for (final entry in data.reversed) {
+     
+      return '${entry.avgPF.toStringAsFixed(2)} %';
+    
+  }
+  return ''; // Return an empty string if no entry with field = 'AvgPF' is found
+}
 
 class Dashboard extends StatefulWidget {
   final List<MyDataModel> parsedData;
   const Dashboard({Key? key, required this.parsedData}) : super(key: key);
-
   @override
   _DashboardState createState() => _DashboardState();
 }
 
 class _DashboardState extends State<Dashboard> {
   final GlobalKey<ScaffoldState> _drawerKey = GlobalKey();
+  InfluxService influxService = InfluxService(); // Declare and initialize influxService
 
   String selectedRegion = ''; // Track the selected region
-  TimePeriod selectedTimePeriod = TimePeriod.Today; // Track the selected time period
+  TimePeriod selectedTimePeriod = TimePeriod.ten_minutes; // Track the selected time period
+  List<MyDataModel> parsedData = [];
+
+ Future<void> fetchDataForSelectedTimePeriod() async {
+ String timeDuration;
+  switch (selectedTimePeriod) {
+    case TimePeriod.two_minutes:
+      timeDuration = "2m";
+      break;
+    case TimePeriod.five_minutes:
+      timeDuration = "5m";
+      break;
+    case TimePeriod.ten_minutes:
+      timeDuration = "10m";
+      break;
+    default:
+      timeDuration = "10m";
+      break;
+  }
+ String region = '722748/0'; // Replace this with the selected region if needed
+     // Create an instance of the InfluxService class
+  List<MyDataModel> data = await influxService.getInfluxData(timeDuration, region);
+ 
+  setState(() {
+    parsedData = data;
+  });
+}
 
   void onTimePeriodChanged(TimePeriod newTimePeriod) {
     setState(() {
       selectedTimePeriod = newTimePeriod;
   });
+  fetchDataForSelectedTimePeriod(); // Call the method to fetch data based on the selected time period
+
 }
+@override
+  void initState() {
+    super.initState();
+    // Initialize parsedData here if needed
+    fetchDataForSelectedTimePeriod(); // Fetch data for the initial selected time period
+  }
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
@@ -50,16 +99,10 @@ class _DashboardState extends State<Dashboard> {
     double voltageUsage = 0;
 
     for (final entry in parsedData) {
-      if (entry.field == 'kWh') {
-        powerUsage = entry.value;
-      }
-      if (entry.field == 'I1') {
-        currentUsage = entry.value;
-      }
-      if (entry.field == 'V1N') {
-        voltageUsage = entry.value;
-      }
-    }
+    powerUsage = entry.kWh; // Accessing the kWh value
+    currentUsage = entry.i1; // Accessing the I1 value
+    voltageUsage = entry.v1N; // Accessing the V1N value
+  }
     
     return[InfoCard(
         icon: 'assets/power.svg',
@@ -94,7 +137,11 @@ class _DashboardState extends State<Dashboard> {
 
     return Scaffold(
       key: _drawerKey,
-      drawer: SizedBox(width: 100, child: SideMenu(key: UniqueKey(),onRegionSelected: (region) {
+      drawer: SizedBox(
+        width: 100, 
+        child: SideMenu(
+          key: UniqueKey(),
+          onRegionSelected: (region) {
             setState(() {
               selectedRegion = region;
             });
@@ -104,14 +151,20 @@ class _DashboardState extends State<Dashboard> {
       appBar: !Responsive.isDesktop(context)
           ? AppBar(
               elevation: 0,
-              backgroundColor: AppColors.white,
-              leading: IconButton(
+              backgroundColor: AppColors.secondaryBg,
+              leading: Builder(
+                builder:(context){
+                  return IconButton(
                   onPressed: () {
-                    _drawerKey.currentState?.openDrawer();
-                  },
-                  icon: Icon(Icons.menu, color: AppColors.black)),
+                  Scaffold.of(context).openDrawer(); // Open the drawer when the hamburger icon is clicked
+                   },
+                  icon: Icon(Icons.menu, color: AppColors.black)
+                  );
+                },
+              ),
               actions: [
-                AppBarActionItems(key: _drawerKey,),
+                AppBarActionItems(
+                  key: _drawerKey,),
               ],
             )
           : PreferredSize(
@@ -160,30 +213,26 @@ class _DashboardState extends State<Dashboard> {
                             InfoCard(
                               icon: 'assets/power.svg',
                               label: ' Power usage',
-                              amount: getInfoCardAmount(
-                                widget.parsedData,
-                                'kWh',
-                            ), data: widget.parsedData,
+                              amount: '${widget.parsedData.first.kWh.toStringAsFixed(2)} KW',
+                              data: widget.parsedData,
                             ),
                             InfoCard(
                               icon: 'assets/volt.svg',
                               label: ' Voltage usage',
-                              amount: getInfoCardAmount(widget.parsedData,
-                                'V1N',
-                            ), data: widget.parsedData,
+                              amount: '${widget.parsedData.first.v1N.toStringAsFixed(2)} V',
+                              data: widget.parsedData,
                             ),
                             InfoCard(
                               icon: 'assets/current.svg',
                               label: 'Current usage ',
-                              amount:getInfoCardAmount(
-                                widget.parsedData,
-                                'I1',
-                              ), data: widget.parsedData,
+                              amount: '${widget.parsedData.first.i1.toStringAsFixed(2)} A',
+                              data: widget.parsedData,
                             ),
                             InfoCard(
                               icon: 'assets/time.svg',
                               label: 'Temperature',
-                              amount: '70 F ', data: widget.parsedData,
+                              amount: '70 F ',
+                              data: widget.parsedData,
                             ),
                           ],
                         ),
@@ -199,23 +248,23 @@ class _DashboardState extends State<Dashboard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               PrimaryText(
-                                text: 'Efficiency',
-                                size: 16,
+                                text: 'Average PF',
+                                size: 30,
                                 fontWeight: FontWeight.w400,
-                                color: AppColors.secondary,
+                                color: AppColors.barBg,
                               ),
                               PrimaryText(
-                                text: '60 \% Efficiency',
-                                size: 30,
+                                text:getLatestPowerFactor(widget.parsedData),
+                                size: 15,
                                 fontWeight: FontWeight.w800,
                               ),
                             ],
                           ),
                           PrimaryText(
-                            text: 'Past 2 minutes',
+                            text: 'Fetched Details',
                             size: 16,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.secondary,
+                            color: AppColors.iconGray,
                           ),
                         ],
                       ),
@@ -224,7 +273,10 @@ class _DashboardState extends State<Dashboard> {
                       ),
                       Container(
                         height: 180,
-                        child: BarChartCopmponent(key: UniqueKey(), data: [],),
+                        child: BarChartCopmponent(
+                          key: UniqueKey(),
+                          data: widget.parsedData,
+                          ),
                       ),
                       SizedBox(
                         height: SizeConfig.blockSizeVertical * 5,
@@ -243,7 +295,7 @@ class _DashboardState extends State<Dashboard> {
                                 : 'Select a region',
                             size: 16,
                             fontWeight: FontWeight.w400,
-                            color: AppColors.secondary,
+                            color: AppColors.iconGray,
                           ),
                         ],
                       ),
@@ -251,12 +303,16 @@ class _DashboardState extends State<Dashboard> {
                         height: SizeConfig.blockSizeVertical * 3,
                       ),
                       if (selectedRegion.isNotEmpty) ...[
-                         RegionDetails(selectedRegion: selectedRegion,parsedData: widget.parsedData),
+                         RegionDetails(
+                          selectedRegion: selectedRegion,
+                          parsedData: widget.parsedData),
                       ] else ...[
-                        HistoryTable(key: UniqueKey(),), // Display a placeholder when no region is selected
+                        HistoryTable(
+                          key: UniqueKey(),
+                          ), // Display a placeholder when no region is selected
                       ],
                       if (!Responsive.isDesktop(context))
-                        PaymentDetailList(key: _drawerKey)
+                        PaymentDetailList(key: _drawerKey, parsedData: widget.parsedData,)
                     ],
                   ),
                 ),
@@ -276,7 +332,7 @@ class _DashboardState extends State<Dashboard> {
                       child: Column(
                         children: [
                           AppBarActionItems(key: UniqueKey()),
-                          PaymentDetailList(key: UniqueKey()),
+                          PaymentDetailList(key: UniqueKey(), parsedData: widget.parsedData,),
                         ],
                       ),
                     ),
@@ -291,17 +347,6 @@ class _DashboardState extends State<Dashboard> {
   
 
 
-String getInfoCardAmount(List<MyDataModel> data, String field) {
-    String amount = '0';
-
-    for (final entry in data) {
-      if (entry.field == field) {
-        amount = entry.value.toStringAsFixed(2);
-      }
-    }
-
-    return amount;
-  }
 }
 
 class RegionDetails extends StatelessWidget {
@@ -324,10 +369,10 @@ class RegionDetails extends StatelessWidget {
                             // You can use tables, bar graphs, or any other desired UI components
         Text(
           'Details for $selectedRegion',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color:AppColors.primary),
         ),
         // Add your UI components here
-      SizedBox(height: 20),
+      SizedBox(height: 10),
         Text(
           'Current',
           style: TextStyle(
@@ -336,14 +381,14 @@ class RegionDetails extends StatelessWidget {
             color: AppColors.primary,
           ),
         ),
-        SizedBox(height: 10),
+        SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
-          height: 200,
-          child: LineChartComponent(data: parsedData, fields: ["AvgPF"],
-          ),
+          height: 300,
+         child: LineChartComponent(dataList: parsedData, chartType: ChartType.current,),
+        
         ),
-        SizedBox(height: 20),
+        SizedBox(height: 10),
         Text(
           'Voltage',
           style: TextStyle(
@@ -352,12 +397,12 @@ class RegionDetails extends StatelessWidget {
             color: AppColors.primary,
           ),
         ),
-        SizedBox(height: 10),
+        SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
-          height: 200,
-          child: LineChartComponent(data: parsedData, fields:["V1N"]),
-        ),
+          height: 400,
+          child: LineChartComponent(dataList: parsedData, chartType: ChartType.voltage),
+          ),
         SizedBox(height: 20),
 
       ],
